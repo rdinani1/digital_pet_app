@@ -17,13 +17,14 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   int happinessLevel = 50;
   int hungerLevel = 50;
 
+  final TextEditingController _nameController = TextEditingController();
+
   Timer? hungerTimer;
 
   @override
   void initState() {
     super.initState();
 
-    // Auto hunger every 30 seconds (this is Feature 4 but harmless to keep)
     hungerTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       _updateHungerAuto();
     });
@@ -32,12 +33,13 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   @override
   void dispose() {
     hungerTimer?.cancel();
+    _nameController.dispose();
     super.dispose();
   }
 
   int _clamp100(int v) => v.clamp(0, 100);
 
-  // ✅ Feature 1: Dynamic color based on happiness
+  // Dynamic color
   Color _moodColor(int happinessLevel) {
     if (happinessLevel > 70) {
       return Colors.green;
@@ -48,7 +50,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     }
   }
 
-  // ✅ Feature 2: Mood indicator text + emoji
+  // Mood text + emoji
   String _moodLabel(int happinessLevel) {
     if (happinessLevel > 70) {
       return "Happy 😄";
@@ -94,6 +96,13 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     });
   }
 
+  // ✅ Name customization
+  void _setName() {
+    setState(() {
+      petName = _nameController.text;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,17 +115,39 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              
+              // Name input row
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: "Pet name",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _setName,
+                    child: const Text("Set"),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
               Text('Name: $petName', style: const TextStyle(fontSize: 20.0)),
               const SizedBox(height: 10),
 
-              // ✅ Feature 2: Mood indicator
               Text(
                 'Mood: ${_moodLabel(happinessLevel)}',
                 style: const TextStyle(fontSize: 18.0),
               ),
+
               const SizedBox(height: 16),
 
-              // ✅ Feature 1: ColorFiltered pet image
               ColorFiltered(
                 colorFilter: ColorFilter.mode(
                   _moodColor(happinessLevel),
@@ -126,9 +157,9 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                   'assets/pet_image.png',
                   width: 220,
                   height: 220,
-                  fit: BoxFit.contain,
                 ),
               ),
+
               const SizedBox(height: 20),
 
               Text(
@@ -140,6 +171,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                 'Hunger Level: $hungerLevel',
                 style: const TextStyle(fontSize: 20.0),
               ),
+
               const SizedBox(height: 30),
 
               ElevatedButton(
