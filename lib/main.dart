@@ -13,16 +13,14 @@ class DigitalPetApp extends StatefulWidget {
 }
 
 class _DigitalPetAppState extends State<DigitalPetApp> {
-  // -------------------------
-  // Part 1: core state
-  // -------------------------
+  // Part 1 core state
   String petName = "Your Pet";
-  int happinessLevel = 50; // 0..100
-  int hungerLevel = 50; // 0..100
+  int happinessLevel = 50;
+  int hungerLevel = 50;
 
   final TextEditingController _nameController = TextEditingController();
 
-  // Visible countdown for 30-second hunger tick
+  // 30-second hunger countdown (visible)
   static const int hungerIntervalSeconds = 30;
   int secondsUntilHungerTick = hungerIntervalSeconds;
   Timer? secondTimer;
@@ -33,18 +31,13 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   bool winShown = false;
   bool gameOverShown = false;
 
-  // -------------------------
-  // Part 2: advanced state
-  // -------------------------
+  // ✅ Part 2 Step A: Energy
   int energyLevel = 60; // 0..100
-  final List<String> activities = ["Play", "Run", "Sleep"];
-  String selectedActivity = "Play";
 
   @override
   void initState() {
     super.initState();
 
-    // One timer that ticks every 1 second (drives the 30s hunger tick + visible countdown)
     secondTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       if (_blockedIfGameEnded()) return;
@@ -58,7 +51,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       });
     });
 
-    // Win check every second
     winCheckTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       _checkWinCondition();
     });
@@ -74,21 +66,18 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
 
   int _clamp100(int v) => v.clamp(0, 100);
 
-  // Part 1: Dynamic color
   Color _moodColor(int happiness) {
     if (happiness > 70) return Colors.green;
     if (happiness >= 30) return Colors.yellow;
     return Colors.red;
   }
 
-  // Part 1: Mood label + emoji
   String _moodLabel(int happiness) {
     if (happiness > 70) return "Happy 😄";
     if (happiness >= 30) return "Neutral 🙂";
     return "Unhappy 😢";
   }
 
-  // Part 1: Name customization
   void _setName() {
     final text = _nameController.text.trim();
     if (text.isEmpty) return;
@@ -98,9 +87,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     FocusScope.of(context).unfocus();
   }
 
-  // -------------------------
-  // Part 1 actions
-  // -------------------------
   void _playWithPet() {
     if (_blockedIfGameEnded()) return;
 
@@ -108,8 +94,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       happinessLevel = _clamp100(happinessLevel + 10);
       hungerLevel = _clamp100(hungerLevel + 5);
 
-      // ✅ Part 2: energy decreases when playing
-      energyLevel = _clamp100(energyLevel - 8);
+      // ✅ Energy decreases when playing
+      energyLevel = _clamp100(energyLevel - 10);
 
       _applyHungerToHappiness();
       _checkLossCondition();
@@ -122,8 +108,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     setState(() {
       hungerLevel = _clamp100(hungerLevel - 10);
 
-      // ✅ Part 2: energy slightly increases when fed
-      energyLevel = _clamp100(energyLevel + 3);
+      // ✅ Small energy boost when fed (optional but reasonable)
+      energyLevel = _clamp100(energyLevel + 5);
 
       _applyHungerToHappiness();
       _checkLossCondition();
@@ -138,7 +124,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     }
   }
 
-  // Called once per 30 seconds (from the 1-second timer)
   void _increaseHungerOnce() {
     hungerLevel = _clamp100(hungerLevel + 5);
 
@@ -150,42 +135,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     _checkLossCondition();
   }
 
-  // -------------------------
-  // Part 2: Activity Selection + logic
-  // -------------------------
-  void _doActivity() {
-    if (_blockedIfGameEnded()) return;
-
-    setState(() {
-      switch (selectedActivity) {
-        case "Run":
-          happinessLevel = _clamp100(happinessLevel + 12);
-          hungerLevel = _clamp100(hungerLevel + 12);
-          energyLevel = _clamp100(energyLevel - 15);
-          break;
-
-        case "Sleep":
-          energyLevel = _clamp100(energyLevel + 20);
-          hungerLevel = _clamp100(hungerLevel + 6);
-          happinessLevel = _clamp100(happinessLevel + 2);
-          break;
-
-        case "Play":
-        default:
-          happinessLevel = _clamp100(happinessLevel + 10);
-          hungerLevel = _clamp100(hungerLevel + 6);
-          energyLevel = _clamp100(energyLevel - 8);
-          break;
-      }
-
-      _applyHungerToHappiness();
-      _checkLossCondition();
-    });
-  }
-
-  // -------------------------
-  // Win/Loss
-  // -------------------------
   void _checkWinCondition() {
     if (!mounted || winShown || gameOverShown) return;
 
@@ -251,11 +200,11 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       petName = "Your Pet";
       happinessLevel = 50;
       hungerLevel = 50;
+
+      // reset energy
       energyLevel = 60;
 
       secondsUntilHungerTick = hungerIntervalSeconds;
-      selectedActivity = "Play";
-
       winStartAbove80 = null;
       winShown = false;
       gameOverShown = false;
@@ -264,9 +213,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     });
   }
 
-  // -------------------------
-  // UI
-  // -------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -276,7 +222,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Name input
               Row(
                 children: [
                   Expanded(
@@ -302,19 +247,14 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
               Text("Mood: ${_moodLabel(happinessLevel)}", style: const TextStyle(fontSize: 18)),
               const SizedBox(height: 10),
 
-              // Visible hunger countdown
               Text(
                 "Next hunger increase in: ${secondsUntilHungerTick}s",
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
 
-              // Pet image tint
               ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  _moodColor(happinessLevel),
-                  BlendMode.modulate,
-                ),
+                colorFilter: ColorFilter.mode(_moodColor(happinessLevel), BlendMode.modulate),
                 child: Image.asset("assets/pet_image.png", width: 220, height: 220),
               ),
               const SizedBox(height: 18),
@@ -324,7 +264,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
               Text("Hunger Level: $hungerLevel", style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 14),
 
-              // ✅ Part 2: Energy Bar
+              // ✅ Energy bar UI
               Row(
                 children: [
                   const Text("Energy", style: TextStyle(fontSize: 16)),
@@ -340,9 +280,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                 ],
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
 
-              // Play/Feed buttons
               ElevatedButton(
                 onPressed: _blockedIfGameEnded() ? null : _playWithPet,
                 child: const Text("Play with Your Pet"),
@@ -351,37 +290,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
               ElevatedButton(
                 onPressed: _blockedIfGameEnded() ? null : _feedPet,
                 child: const Text("Feed Your Pet"),
-              ),
-
-              const SizedBox(height: 18),
-
-              // ✅ Part 2: Activity dropdown + action button
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: selectedActivity,
-                      items: activities
-                          .map((a) => DropdownMenuItem(value: a, child: Text(a)))
-                          .toList(),
-                      onChanged: _blockedIfGameEnded()
-                          ? null
-                          : (val) {
-                              if (val == null) return;
-                              setState(() => selectedActivity = val);
-                            },
-                      decoration: const InputDecoration(
-                        labelText: "Choose activity",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _blockedIfGameEnded() ? null : _doActivity,
-                    child: const Text("Do it"),
-                  ),
-                ],
               ),
 
               const SizedBox(height: 12),
