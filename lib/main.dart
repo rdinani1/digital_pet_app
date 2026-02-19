@@ -31,8 +31,12 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   bool winShown = false;
   bool gameOverShown = false;
 
-  // ✅ Part 2 Step A: Energy
+  // Part 2 Step A: Energy
   int energyLevel = 60; // 0..100
+
+  // ✅ Part 2 Step B: Activity dropdown
+  final List<String> activities = ["Play", "Run", "Sleep"];
+  String selectedActivity = "Play";
 
   @override
   void initState() {
@@ -94,7 +98,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       happinessLevel = _clamp100(happinessLevel + 10);
       hungerLevel = _clamp100(hungerLevel + 5);
 
-      // ✅ Energy decreases when playing
+      // Energy decreases when playing
       energyLevel = _clamp100(energyLevel - 10);
 
       _applyHungerToHappiness();
@@ -108,7 +112,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     setState(() {
       hungerLevel = _clamp100(hungerLevel - 10);
 
-      // ✅ Small energy boost when fed (optional but reasonable)
+      // Small energy boost when fed
       energyLevel = _clamp100(energyLevel + 5);
 
       _applyHungerToHappiness();
@@ -133,6 +137,37 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
 
     _applyHungerToHappiness();
     _checkLossCondition();
+  }
+
+  // ✅ Step B: Do selected activity
+  void _doActivity() {
+    if (_blockedIfGameEnded()) return;
+
+    setState(() {
+      switch (selectedActivity) {
+        case "Run":
+          happinessLevel = _clamp100(happinessLevel + 12);
+          hungerLevel = _clamp100(hungerLevel + 12);
+          energyLevel = _clamp100(energyLevel - 15);
+          break;
+
+        case "Sleep":
+          energyLevel = _clamp100(energyLevel + 20);
+          hungerLevel = _clamp100(hungerLevel + 6);
+          happinessLevel = _clamp100(happinessLevel + 2);
+          break;
+
+        case "Play":
+        default:
+          happinessLevel = _clamp100(happinessLevel + 10);
+          hungerLevel = _clamp100(hungerLevel + 6);
+          energyLevel = _clamp100(energyLevel - 8);
+          break;
+      }
+
+      _applyHungerToHappiness();
+      _checkLossCondition();
+    });
   }
 
   void _checkWinCondition() {
@@ -200,11 +235,11 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       petName = "Your Pet";
       happinessLevel = 50;
       hungerLevel = 50;
-
-      // reset energy
       energyLevel = 60;
 
+      selectedActivity = "Play";
       secondsUntilHungerTick = hungerIntervalSeconds;
+
       winStartAbove80 = null;
       winShown = false;
       gameOverShown = false;
@@ -264,7 +299,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
               Text("Hunger Level: $hungerLevel", style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 14),
 
-              // ✅ Energy bar UI
+              // Energy bar
               Row(
                 children: [
                   const Text("Energy", style: TextStyle(fontSize: 16)),
@@ -280,7 +315,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                 ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
 
               ElevatedButton(
                 onPressed: _blockedIfGameEnded() ? null : _playWithPet,
@@ -290,6 +325,37 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
               ElevatedButton(
                 onPressed: _blockedIfGameEnded() ? null : _feedPet,
                 child: const Text("Feed Your Pet"),
+              ),
+
+              const SizedBox(height: 18),
+
+              // ✅ Step B UI: Dropdown + Do Activity
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: selectedActivity,
+                      items: activities
+                          .map((a) => DropdownMenuItem(value: a, child: Text(a)))
+                          .toList(),
+                      onChanged: _blockedIfGameEnded()
+                          ? null
+                          : (val) {
+                              if (val == null) return;
+                              setState(() => selectedActivity = val);
+                            },
+                      decoration: const InputDecoration(
+                        labelText: "Choose activity",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _blockedIfGameEnded() ? null : _doActivity,
+                    child: const Text("Do it"),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 12),
